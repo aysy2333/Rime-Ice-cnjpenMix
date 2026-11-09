@@ -1,0 +1,6 @@
+patch:
+  # 1. 继承原有的英文词库
+  # 2. 额外引入你的日语词库
+  "import_tables":
+    - melt_eng     # 引入雾凇自带的英文
+    - japanese     # 引入你的日语词库 (japanese.dict.yaml)

@@ -1,0 +1,84 @@
+# Rime schema
+# encoding: utf-8
+
+schema:
+  schema_id: japanese
+  name: 日本語
+  version: 'Final'
+  author:
+    - ensigma96 <ensigma96@gmail.com>
+  description: |
+    纯净版日语。
+    已修复拼音反查（按 ` 键）。
+  dependencies:
+    - luna_pinyin  # 依赖拼音方案用于反查
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 日本語, English ]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - script_translator
+    - reverse_lookup_translator
+  filters:
+    - uniquifier
+
+speller:
+  alphabet: 'zyxwvutsrqponmlkjihgfedcba-_'
+  delimiter: " '"
+  algebra:
+    - xform/^([a-z]*)$/$1/
+    - derive/tsu/tu/
+    - derive/shi/si/
+    - derive/ja/jya/
+    - derive/ju/jyu/
+    - derive/je/jye/
+    - derive/jo/jyo/
+    - derive/^l/x/
+
+translator:
+  dictionary: japanese
+  spelling_hints: 5
+  comment_format:
+    - 'xlit|q|ー|'
+  preedit_format:
+    - 'xlit|q|ー|'
+
+reverse_lookup:
+  dictionary: rime_ice
+  prefix: "`"
+  suffix: "'"
+  tips: 〔拼音查日〕
+  preedit_format:
+    - xform/([nl])v/$1ü/
+    - xform/([nl])ue/$1üe/
+    - xform/([jqxy])v/$1u/
+
+punctuator:
+  import_preset: default
+
+key_binder:
+  import_preset: default
+
+recognizer:
+  import_preset: default
+  patterns:
+    reverse_lookup: "`[a-z]*'?$"

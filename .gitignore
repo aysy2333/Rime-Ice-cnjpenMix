@@ -1,0 +1,18 @@
+# Rime 编译缓存与用户词库
+build/
+*.userdb/
+*.userdb.txt
+user.yaml
+installation.yaml
+sync/
+
+# 系统与编辑器缓存
+.DS_Store
+*.old
+*.bck
+
+# 个人隐私短语与同步缓存日志（避免泄露手机号、邮箱、住址等）
+custom_phrase.txt
+.apple_text_replacements.hash
+.sync_apple.log
+.sync_apple.err

@@ -1,0 +1,9 @@
+patch:
+  schema_list:
+    - schema: rime_ice_mix       # 1. 雾凇混输
+    - schema: rime_ice           # 2. 雾凇简体
+    - schema: rime_ice_tw        # 3. 雾凇繁体
+  "menu/page_size": 9
+  "switcher/save_options": []    # 清空开关项，彻底移除二级菜单，仅保留纯净方案列表
+
+

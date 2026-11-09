@@ -1,0 +1,66 @@
+patch:
+  show_notifications_when: appropriate
+  style/+:
+    # === 1. 颜色主题：切换为蓝色 ===
+    color_scheme: mint_light_blue
+    color_scheme_dark: mint_dark_blue
+    
+    # === 2. 布局瘦身（解决边框太宽的问题）===
+    border_width: 0           # 物理边框设为0
+    spacing: 5               # 【关键】内边距减半，看起来会更紧凑
+    line_spacing: 4           # 行间距微调
+    corner_radius: 6          # 圆角调小一点，显得更干练
+    
+    # 其他保持不变
+    candidate_list_layout: linear
+    text_orientation: horizontal
+    inline_preedit: true
+    inline_candidate: false
+    show_paging: false
+    remember_size: false
+    hilited_corner_radius: 6  # 跟随圆角调整
+    border_height: 0
+    font_face: 'PingFang SC '
+    font_point: 16
+    label_font_point: 16
+    comment_font_point: 14
+
+  # 预设皮肤 (保留你喜欢的 Mintimate 配色)
+  preset_color_schemes/+:
+    mint_light_blue:
+      name: "蓝水鸭／Mint Light Blue"
+      author: Mintimate <"Mintimate's Blog">
+     
+     
+     
+      back_color: 0xeef1f3                    # 背景：纯白
+      border_color: 0xeef1f3                  # 边框：纯白 (无边框效果)
+      
+      text_color: 0x424242                    # 编码/拼音颜色：深灰
+      candidate_text_color: 0x393a39          # 候选项：纯黑
+      comment_text_color: 0x6d6d6d            # 备注/注音：浅灰
+      label_color: 0x6d6d6d                   # 序号：浅灰
+      
+      # 选中项高亮设置
+      hilited_candidate_back_color: 0xcf5925  # 选中背景：深蓝 (已修正)
+      hilited_candidate_text_color: 0xffffff  # 选中文字：纯白
+      hilited_comment_text_color: 0xeeeeee    # 选中备注：白灰
+      hilited_candidate_label_color: 0xffffff # 选中序号：纯白
+      hilited_text_color: 0xcf5925            # 选中拼音高亮：深蓝alse）
+
+    mint_dark_blue:
+      name: 黑水鸭／Mint Dark Blue
+      author: Mintimate <"Mintimate's Blog">
+     
+     
+      
+      back_color: 0x353839                    # 底色
+      hilited_candidate_back_color: 0xcf5925  # 选中底色
+      label_color: 0xcac9c8                   # 序号颜色
+      hilited_candidate_label_color: 0xffffff # 选中序号颜色
+      candidate_text_color: 0xffffff          # 文字颜色
+      hilited_candidate_text_color: 0xffffff  # 选中文字颜色
+      comment_text_color: 0xefefef            # 注颜色
+      hilited_comment_text_color: 0xffffff    # 选中注颜色
+      text_color: 0x6495ed                    # 拼音颜色 （inline_preedit: false）
+      hilited_text_color: 0xc6c01a            # 选中拼音颜色 （inline_preedit: false）

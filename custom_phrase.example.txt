@@ -1,0 +1,47 @@
+# Rime table
+# coding: utf-8
+#@/db_name	custom_phrase.txt
+#@/db_type	tabledb
+#
+# 自定义短语模板 (建议重命名为 custom_phrase.txt 或使用 sync_apple_text_replacements.py 同步)
+# 格式：词汇<Tab>编码<Tab>权重
+#
+# 此行之后不能写注释
+
+# 核心日语置顶（请勿删除）
+ん	nn	100
+ン	nn	99
+ー	-	100
+
+# 常用示例（可自行替换）
+# 13800000000	dh	100
+# example@gmail.com	mail	100
+
+# 语气助词及单字快捷编码
+噷	hm	100
+呣	m	100
+呒	m	100
+有	u	3
+又	u	2
+由	u	1
+一	i	4
+以	i	3
+已	i	2
+亦	i	1
+一个	ig	100
+有个	ug	100
+是一个	sig	100
+有一个	uig	100
+有没有	umu	100
+又有	uu	100
+又双叒叕	uuuu	100
+
+# 常用专有名词防纠错
+go	go	100
+Golang	golang	100
+Hugo	hugo	100
+goto	goto	100
+TODO	todo	100
+Amazon	amazon	100
+NASA	nasa	100
+code	code	100

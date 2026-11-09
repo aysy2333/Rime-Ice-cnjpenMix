@@ -1,0 +1,380 @@
+# Rime schema
+# encoding: utf-8
+
+
+# 方案说明
+schema:
+  schema_id: rime_ice_mix
+  name: 雾凇中日混输
+  version: "2026-08-26"
+  author:
+    - Dvel
+    - DIY
+  description: |
+    雾凇拼音 + 日语混输
+    基于雾凇拼音构建，融合 Mozc 日语大词库与中日混输能力。
+  dependencies:
+    - melt_eng        # 英文输入，作为次翻译器挂载到拼音方案
+    - radical_pinyin  # 部件拆字，反查及辅码
+    - japanese        # 日语词库
+    - japanese_pinyin # 纯净日文汉字拼音反查专用词典
+
+
+# 开关 (仅 ascii_mode 保留 states 以展示 Shift 切换中英的浮动提示气泡，其余隐藏以去除二级菜单)
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中, Ａ ]
+  - name: ascii_punct
+    reset: 0
+  - name: traditionalization
+    reset: 0                  # 始终重置为简体，绝不继承繁体
+  - name: emoji
+    reset: 1
+  - name: full_shape
+    reset: 0
+  - name: search_single_char
+    reset: 0
+
+
+# 输入引擎
+engine:
+  processors:
+    - lua_processor@*select_character  # 以词定字
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - affix_segmentor@radical_lookup  # 部件拆字自定义 tag
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - script_translator                  # 1. 中文主引擎 (rime_ice)
+    - lua_translator@*date_translator    # 时间、日期、星期
+    - lua_translator@*lunar              # 农历
+    - lua_translator@*uuid               # UUID
+    - table_translator@custom_phrase     # 自定义短语 custom_phrase.txt
+    - table_translator@japanese          # 2. 日语混输引擎 (Mozc / JMdict / Kana)
+    - table_translator@melt_eng          # 3. 英文输入
+    - table_translator@cn_en             # 中英混合词汇
+    - table_translator@radical_lookup    # 部件拆字反查
+    - lua_translator@*unicode            # Unicode
+    - lua_translator@*number_translator  # 数字、金额大写
+    - lua_translator@*calc_translator    # 计算器
+    - lua_translator@*force_gc           # 暴力 GC
+    - reverse_lookup_translator          # 拼音反查日语 (按 ` 键触发)
+  filters:
+    - lua_filter@*corrector                         # 错音错字提示
+    - reverse_lookup_filter@radical_reverse_lookup  # 部件拆字滤镜
+    - lua_filter@*autocap_filter                    # 英文自动大写
+    - lua_filter@*v_filter                          # v 模式 symbols 优先
+    - lua_filter@*pin_cand_filter                   # 置顶候选项（顺序要求：置顶候选项 > Emoji > 简繁切换）
+    - lua_filter@*long_word_filter                  # 长词优先（顺序要求：长词优先 > Emoji）
+    - lua_filter@*reduce_english_filter             # 降低部分英语单词在候选项的位置
+    - simplifier@emoji                              # Emoji
+    - simplifier@traditionalize                     # 简繁切换
+    - lua_filter@*search@radical_pinyin             # 部件拆字辅码
+    - uniquifier                                    # 去重
+
+
+# Lua 配置: 日期、时间、星期、ISO 8601、时间戳的触发关键字
+date_translator:
+  date: rq       # 日期： 2022-11-29
+  time: sj       # 时间： 18:13
+  week: xq       # 星期： 星期二
+  datetime: dt   # ISO 8601： 2022-11-29T18:13:11+08:00
+  timestamp: ts  # 时间戳： 1669716794
+
+
+# Lua 配置：农历的触发关键字
+lunar: nl  # 农历： 二〇二三年冬月二十 癸卯年（兔）冬月二十
+
+
+# Lua 配置: 生成 UUID 的触发关键字
+uuid: uuid
+
+
+# Lua 配置：长词优先
+# 提升 count 个词语，插入到第 idx 个位置。
+# 示例：将 2 个词插入到第 4、5 个候选项，输入 jie 得到「1接 2解 3姐 4饥饿 5极恶 6结 7界……」
+long_word_filter:
+  count: 2
+  idx: 4
+
+
+# Lua 配置: 降低部分英语单词在候选项的位置。
+reduce_english_filter:
+  mode: custom  # all | custom | none
+  idx: 2        # 降低到第 idx 个位置
+  # 自定义的单词列表，示例列表没有降低部分常用单词，如 and cat mail Mac but bad shit ……
+  words: [
+    aid, ann,
+    bail, bait, bam, band, bans, bat, bay, bend, bent, benz, bib, bid, bien, biz, boc, bop, bos, bud, buf, bus, bach, bench, bush, bog,
+    cab, cad, cain, cam, cans, cap, cef, chad, chan, chap, chef, cher, chew, chic, chin, chip, chit, coup, cum, cunt, cur, couch,
+    dab, dag, dal, dam, dent, dew, dial, diet, dim, din, dip, dis, dit, doug, dub, dug, dunn, don,
+    fab, fax, fob, fog, foul, fur, fend,
+    gag, gail, gain, gal, gam, gaol, ged, gel, ger, guam, gus, gut,
+    hail, ham, hank, hans, hat, hay, heil, heir, hem, hep, hex, hud, hum, hung, hunk, hut, hush,
+    jim, jug,
+    kat,
+    lab, lad, lag, laid, lam, laos, lap, lat, lax, lay, led, leg, lex, liam, lib, lichen, lid, lied, lien, lies, linn, lip, lit, liz, lob, lug, lund, lung, lux, lash, loch, lush,
+    mag, maid, mann, mar, mat, med, mel, mend, mens, ment, mil, mins, mint, mob, moc, mop, mos, mot, mud, mug, mum, mesh,
+    nap, nat, nay, neil, nib, nip, noun, nous, nun, nut, nail, nash,
+    pac, paid, pail, pain, pair, pak, pal, pam, pans, pant, pap, par, pat, paw, pax, pens, pic, pier, pies, pins, pint, pit, pix, pod, pop, pos, pot, pour, pow, pub, pinch, pouch,
+    rand, rant, rent, rep, res, ret, rex, rib, rid, rig, rim, rub, rug, rum, runc, runs, ranch,
+    sac, sail, sal, sam, sans, sap, saw, sax, sew, sham, shaw, shin, sig, sin, sip, sis, suit, sung, suns, sup, sur, sus,
+    tad, tail, taj, tar, tax, tec, ted, tel, ter, tex, tic, tied, tier, ties, tim, tin, tit, tour, tout, tum,
+    wag, wand, womens, wap, wax, weir, won, went,
+    yan, yen,
+    zach,
+    my, mt, dj, as, js, cs, ak, ps, cd, cn, hk, bt, pk, ml
+  ]
+
+
+# Lua 配置: 置顶候选项
+pin_cand_filter:
+  - d	的
+  - m	吗 嘛
+  - hm	后面
+  - nn	ん ン
+
+
+# 1. 主翻译器：中文全拼 (雾凇词库)
+translator:
+  dictionary: rime_ice         # 挂载词库 rime_ice.dict.yaml
+  enable_word_completion: true # 大于 4 音节的词条自动补全
+  spelling_hints: 8            # corrector.lua 错音错字提示
+  always_show_comments: true   # 强制显示 comment 供 corrector.lua 判断
+  initial_quality: 1.2         # 中文权重
+  comment_format:
+    - xform/^/［/
+    - xform/$/］/
+  preedit_format:
+    - xform/([jqxy])v/$1u/
+    - xform/([nl])v/$1v/
+    - xform/([nl])ue/$1ve/
+    - xform/(?<=[A-Z])\s(?=[A-Z])//
+
+
+# 2. 日语翻译器 (Mozc / JMdict / Kana)
+japanese:
+  dictionary: japanese
+  enable_sentence: true        # 允许长句连打
+  enable_encoder: true         # 自动组词
+  enable_user_dict: true       # 允许记录用户输入的日语词
+  initial_quality: 1.15        # 日语权重：略高于英文(0.9)，与中文(1.2)自然混排
+
+
+# 3. 次翻译器：英文
+melt_eng:
+  dictionary: melt_eng     # 挂载词库 melt_eng.dict.yaml
+  enable_sentence: false   # 禁止造句
+  enable_user_dict: false  # 禁用用户词典
+  initial_quality: 0.9     # 初始权重（低于中文与日语）
+  comment_format:
+    - xform/.*//           # 清空提示码
+
+
+# 4. 中英混合词汇
+cn_en:
+  dictionary: ""
+  user_dict: en_dicts/cn_en
+  db_class: stabledb
+  enable_completion: true
+  enable_sentence: false
+  initial_quality: 0.5
+  comment_format:
+    - xform/^.+$//
+
+
+# 5. 自定义短语：custom_phrase.txt
+custom_phrase:
+  dictionary: ""
+  user_dict: custom_phrase  # 读取 custom_phrase.txt
+  db_class: stabledb
+  enable_completion: false
+  enable_sentence: false
+  initial_quality: 99       # 最高权重，确保自定义快捷短语首位响应
+
+
+# Emoji
+emoji:
+  option_name: emoji
+  opencc_config: emoji.json
+  inherit_comment: false
+
+
+# 简繁切换（特别保护：排除 table 类型，防止日语汉字被强行繁体化）
+traditionalize:
+  option_name: traditionalization
+  opencc_config: s2t.json
+  tips: none
+  tags: [ abc, number, gregorian_to_lunar ]
+  excluded_types: [ table ]
+
+
+# 反查日文新字体滤镜 (将拼音反查产生的汉字转为标准日文汉字/新字体，如 寫真->写真, 爲->為, 櫻->桜, 廣->広, 氣->気)
+japanese_shinjitai:
+  opencc_config: s2jp.json
+  tags: [ reverse_lookup ]
+
+
+
+# 标点符号
+punctuator:
+  __include: default:/punctuator
+  full_shape:
+    __include: default:/punctuator/full_shape
+  half_shape:
+    __include: default:/punctuator/half_shape
+  symbols:
+    __include: symbols_v:/symbols
+
+
+# 部件拆字反查
+radical_lookup:
+  tag: radical_lookup
+  dictionary: radical_pinyin
+  enable_user_dict: false
+  prefix: "uU"
+  tips: "  〔拆字〕"
+  comment_format:
+    - erase/^.*$//
+
+
+# 部件拆字滤镜
+radical_reverse_lookup:
+  tags: [ radical_lookup ]
+  dictionary: rime_ice
+
+
+# 拼音反查日语 (按 ` 键触发，精准输出日文汉字与读音)
+reverse_lookup:
+  dictionary: japanese_pinyin
+  prefix: "`"
+  suffix: "'"
+  tips: "〔拼音查日〕"
+  preedit_format:
+    - xform/([nl])v/$1ü/
+    - xform/([nl])ue/$1üe/
+    - xform/([jqxy])v/$1u/
+  comment_format:
+    - xlit|q|ー|
+    - xform/^/〔/
+    - xform/$/〕/
+
+
+# 处理符合特定规则的输入码
+recognizer:
+  import_preset: default
+  patterns:
+    punct: "^v([0-9]|10|[A-Za-z]+)$"
+    radical_lookup: "^uU[a-z]+$"
+    unicode: "^U[a-f0-9]+"
+    number: "^R[0-9]+[.]?[0-9]*"
+    calculator: "^cC.+"
+    gregorian_to_lunar: "^N[0-9]{1,8}"
+    reverse_lookup: "`[a-z]*'?$"
+
+
+# 快捷键 (特别配置：支持逗号句号翻页，释放 minus 键用于输入日文长音 ー)
+key_binder:
+  search: "`"
+  bindings:
+    - { when: composing, accept: Alt+Left, send: Shift+Left }
+    - { when: composing, accept: Alt+Right, send: Shift+Right }
+    - { when: has_menu, accept: comma, send: Page_Up }
+    - { when: has_menu, accept: period, send: Page_Down }
+    - { when: paging, accept: comma, send: Page_Up }
+    - { when: paging, accept: period, send: Page_Down }
+    - { when: has_menu, accept: equal, send: Page_Down }
+    - { when: has_menu, accept: Shift+Tab, send: Page_Up }
+    - { when: has_menu, accept: Tab, send: Page_Down }
+    - { when: always, toggle: ascii_punct, accept: Control+Shift+3 }
+    - { when: always, toggle: ascii_punct, accept: Control+Shift+numbersign }
+    - { when: always, toggle: traditionalization, accept: Control+Shift+4 }
+    - { when: always, toggle: traditionalization, accept: Control+Shift+dollar }
+
+
+
+# 操作键行为
+editor:
+  bindings:
+    space: confirm
+    Return: commit_raw_input
+    Control+Return: commit_script_text
+    Control+Shift+Return: commit_comment
+    BackSpace: revert
+    Delete: delete
+    Control+BackSpace: back_syllable
+    Control+Delete: delete_candidate
+    Escape: cancel
+
+
+# 拼写设定
+speller:
+  alphabet: "zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA`-"
+  initials: "zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA-"
+  delimiter: " '"
+  algebra:
+    ### 超级简拼
+    - erase/^hm$/
+    - erase/^m$/
+    - erase/^n$/
+    - erase/^ng$/
+    - abbrev/^([a-z]).+$/$1/
+    - abbrev/^([zcs]h).+$/$1/
+
+    ### v u 转换
+    - derive/^([nl])ve$/$1ue/
+    - derive/^([jqxy])u/$1v/
+    - derive/^([nl])ue$/$1ve/
+    - derive/^([jqxy])v/$1u/
+
+    ### 自动纠错
+    - derive/([zcs])h(a|e|i|u|ai|ei|an|en|ou|uo|ua|un|ui|uan|uai|uang|ang|eng|ong)$/h$1$2/
+    - derive/([zcs])h([aeiu])$/$1$2h/
+    - derive/^([wghk])ai$/$1ia/
+    - derive/([wfghkz])ei$/$1ie/
+    - derive/([jqx])ie$/$1ei/
+    - derive/([rtypsdghklzcbnm])ao$/$1oa/
+    - derive/([ypfm])ou$/$1uo/
+    - derive/([wrtypsdfghklzcbnm])ang$/$1nag/
+    - derive/([wrtypsdfghklzcbnm])ang$/$1agn/
+    - derive/([wrtpsdfghklzcbnm])eng$/$1neg/
+    - derive/([wrtpsdfghklzcbnm])eng$/$1egn/
+    - derive/([qtypdjlxbnm])ing$/$1nig/
+    - derive/([qtypdjlxbnm])ing$/$1ign/
+    - derive/([rtysdghklzcn])ong$/$1nog/
+    - derive/([rtysdghklzcn])ong$/$1ogn/
+    - derive/([qtpdjlxbnm])iao$/$1ioa/
+    - derive/([qtpdjlxbnm])iao$/$1oia/
+    - derive/([rtsghkzc])ui$/$1iu/
+    - derive/([qjlxnm])iu$/$1ui/
+    - derive/([qjlxn])iang$/$1aing/
+    - derive/([qjlxn])iang$/$1inag/
+    - derive/([g|k|h|zh|sh])ua$/$1au/
+    - derive/([g|h|k|zh|ch|sh])uai$/$1aui/
+    - derive/([qrtysdghjklzxcn])uan$/$1aun/
+    - derive/([nlyjqx])ue$/$1eu/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1aung/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1uagn/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1unag/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1augn/
+    - derive/([jqx])iong$/$1inog/
+    - derive/([jqx])iong$/$1oing/
+    - derive/([jqx])iong$/$1iogn/
+    - derive/([jqx])iong$/$1oign/
+    - derive/([rtsdghkzc])o(u|ng)$/$1o/
+    - derive/(.+)ong$/$1on/
+    - derive/([tl])eng$/$1en/
+    - derive/([qwrtypsdfghjklzxcbnm])([aeio])ng$/$1ng/

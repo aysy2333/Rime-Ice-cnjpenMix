@@ -1,0 +1,29 @@
+# Rime schema
+# encoding: utf-8
+
+__include: rime_ice.schema:/
+
+schema:
+  schema_id: rime_ice_tw
+  name: 雾凇繁体
+  version: "2026-08-27"
+  author:
+    - Dvel
+  description: |
+    雾凇拼音·繁体模式
+    默认输出繁体中文，继承雾凇拼音全量词库与所有插件。
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 繁, Ａ ]
+  - name: ascii_punct
+    reset: 0
+  - name: traditionalization
+    reset: 1                  # 始终重置为繁体
+  - name: emoji
+    reset: 1
+  - name: full_shape
+    reset: 0
+  - name: search_single_char
+    reset: 0
